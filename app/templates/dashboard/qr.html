@@ -1,0 +1,109 @@
+{% extends "dashboard/dash_base.html" %}
+
+{% block title %}QR Code — {{ business.name }} — QR Reviews{% endblock %}
+
+{% block dash_content %}
+<div class="dash-header">
+  <h1 class="dash-title">Your QR Code</h1>
+  <p class="dash-subtitle">Print this and place it where customers can scan</p>
+</div>
+
+{% if business.is_admin or business.has_paid %}
+<!-- ═══════════════════════════════════════════════════════════════════════
+     UNLOCKED STATE — QR code is available
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="qr-display">
+  <div class="qr-preview">
+    <img
+      src="/qr/{{ business.slug }}.png"
+      alt="QR Code for {{ business.name }}"
+      id="qrImage"
+    />
+  </div>
+
+  <p class="meta-line" style="margin-top:16px;">
+    {{ business.name | upper }} · {{ business.slug | upper }}
+  </p>
+  <p class="qr-url">{{ app_url }}/review/{{ business.slug }}</p>
+
+  <div class="qr-actions">
+    <a href="/qr/{{ business.slug }}.png?download=1" class="btn btn-secondary btn-sm btn-inline" download>
+      ↓ Download PNG
+    </a>
+    <a href="/qr/{{ business.slug }}.svg?download=1" class="btn btn-secondary btn-sm btn-inline" download>
+      ↓ Download SVG
+    </a>
+  </div>
+
+  <!-- Print instructions -->
+  <div style="margin-top:32px; text-align:left;">
+    <p class="chip-label" style="margin-bottom:12px;">Printing Tips</p>
+    <div class="hint" style="margin-top:0;">
+      <p>• Print at <b>300 DPI or higher</b> for best quality</p>
+      <p style="margin-top:4px;">• Recommended size: <b>3×3 inches</b> minimum</p>
+      <p style="margin-top:4px;">• Place near the <b>checkout counter, entrance, or table tents</b></p>
+      <p style="margin-top:4px;">• Make sure there's <b>good lighting</b> — phones need contrast to scan</p>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- ═══════════════════════════════════════════════════════════════════════
+     LOCKED STATE — Payment required
+     ═══════════════════════════════════════════════════════════════════════ -->
+<div class="qr-display qr-locked">
+  <div class="qr-preview">
+    <!-- Blurred placeholder QR -->
+    <svg viewBox="0 0 200 200" width="180" height="180" style="opacity:0.3;">
+      <rect x="20" y="20" width="60" height="60" fill="var(--ink)" rx="4"/>
+      <rect x="120" y="20" width="60" height="60" fill="var(--ink)" rx="4"/>
+      <rect x="20" y="120" width="60" height="60" fill="var(--ink)" rx="4"/>
+      <rect x="90" y="90" width="20" height="20" fill="var(--ink)" rx="2"/>
+      <rect x="120" y="120" width="30" height="30" fill="var(--ink)" rx="3"/>
+      <rect x="160" y="120" width="20" height="20" fill="var(--ink)" rx="2"/>
+      <rect x="120" y="160" width="20" height="20" fill="var(--ink)" rx="2"/>
+      <rect x="160" y="160" width="20" height="20" fill="var(--ink)" rx="2"/>
+    </svg>
+    <!-- Lock overlay -->
+    <svg class="lock-icon" viewBox="0 0 24 24" style="position:absolute; z-index:2;">
+      <path d="M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2z" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7 11V7a5 5 0 0110 0v4" fill="none" stroke="var(--ink)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <p class="eyebrow" style="margin-top:20px; margin-bottom:4px;">Unlock Your QR Code</p>
+
+  <div class="paywall">
+    <div class="paywall-price">
+      <span class="currency">₹</span>{{ price_display }}
+    </div>
+    <p class="paywall-label">One-time payment</p>
+
+    <ul class="paywall-features">
+      <li>Branded QR code with your logo</li>
+      <li>Unlimited customer scans</li>
+      <li>AI-powered review generation</li>
+      <li>Download PNG &amp; SVG</li>
+      <li>Full dashboard analytics</li>
+    </ul>
+
+    <button
+      type="button"
+      class="btn btn-accent"
+      id="payBtn"
+      onclick="startPayment()"
+      style="max-width:320px; margin:0 auto;"
+    >
+      Pay &amp; Generate QR
+    </button>
+
+    <p class="hint" style="text-align:center; margin-top:14px;">
+      Secure payment via Razorpay · UPI, cards, net banking
+    </p>
+  </div>
+</div>
+
+<!-- Hidden data for Razorpay JS -->
+<input type="hidden" id="razorpay-key" value="{{ razorpay_key }}" />
+{% endif %}
+{% endblock %}
