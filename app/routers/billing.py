@@ -33,8 +33,9 @@ async def create_order(
             "amount": order["amount"],
             "currency": order["currency"],
             "key": order["key"],
-            "name": "QR Reviews",
+            "name": "revQR",
             "description": f"QR Code for {business.name}",
+
             "business_name": business.name,
             "email": business.email,
             "slug": business.slug,

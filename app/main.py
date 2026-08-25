@@ -37,11 +37,12 @@ async def lifespan(app: FastAPI):
 # ── FastAPI App ───────────────────────────────────────────────────────────────
 
 app = FastAPI(
-    title="QR Reviews",
+    title="revQR",
     description="AI-powered Google review generator for SMBs",
     version="0.1.0",
     lifespan=lifespan,
 )
+
 
 STATIC_DIR = BASE_DIR / "static"
 MEDIA_DIR = BASE_DIR.parent / "media"

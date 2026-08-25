@@ -295,7 +295,7 @@
         order_id: "order_...",
         amount: 149900,
         currency: "INR",
-        name: "QR Reviews",
+        name: "revQR",
         description: "QR Code Generation",
         business_name: "Kaffi & Co.",
         email: "biz@example.com",
@@ -307,8 +307,9 @@
       key: options.key,
       amount: options.amount,
       currency: options.currency || "INR",
-      name: options.name || "QR Reviews",
+      name: options.name || "revQR",
       description: options.description || "QR Code for " + options.business_name,
+
       order_id: options.order_id,
       prefill: {
         email: options.email || "",
