@@ -53,22 +53,16 @@ async def get_qr_image(
     fill_color = color.strip() if color.strip() else "#000000"
 
 
-    # Center badge text (business initials)
-    center_text = target_business.name if badge == 1 else None
-
-    # Bottom label text for downloaded images (shows business name and custom source/table)
-    label_text = None
-    if download == 1:
-        source_label = f" · {source.strip().replace('_', ' ').title()}" if source.strip() else ""
-        label_text = f"revQR · {target_business.name}{source_label}"
+    # Bottom label text (shows business name and custom source/table below the QR)
+    source_label = f" · {source.strip().replace('_', ' ').upper()}" if source.strip() else ""
+    label_text = f"{target_business.name.upper()}{source_label}"
 
     # Generate QR Code bytes
     qr_bytes = generate_qr_code(
         target_url,
         format=ext,
         fill_color=fill_color,
-        center_text=center_text,
-        logo_path=None,
+        business_name=target_business.name,
         label_text=label_text,
     )
 
@@ -80,3 +74,4 @@ async def get_qr_image(
         headers["Content-Disposition"] = f'attachment; filename="qr_{target_business.slug}{source_suffix}.{ext}"'
 
     return Response(content=qr_bytes, media_type=media_type, headers=headers)
+
