@@ -28,7 +28,10 @@
         </div>
         {% endif %}
         <div class="standee-biz-name">{{ business.name }}</div>
+        <div class="standee-tag" id="standeeTag" style="display:none; margin:6px auto 0; font-size:11px; font-weight:700; color:var(--ink); background:var(--paper-deep); border:1px solid var(--line); border-radius:999px; padding:3px 12px; width:fit-content; letter-spacing:0.5px;">
+        </div>
       </div>
+
 
       <!-- Headline -->
       <div class="standee-headline" id="standeeHeadline">
@@ -80,6 +83,12 @@
     </div>
 
     <div class="standee-control-group">
+      <label class="wa-label">Table / Counter / Location Tag (Optional)</label>
+      <input type="text" id="standeeLocationInput" class="wa-input" placeholder="e.g. Table #01, Counter A, Desk 2" maxlength="30" oninput="updateStandeeLocation()" />
+      <p class="hint" style="margin-top:4px;">Adds a physical label on the standee and tracks reviews per table/counter in your analytics.</p>
+    </div>
+
+    <div class="standee-control-group">
       <label class="wa-label">Size</label>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button type="button" class="btn btn-secondary btn-sm btn-inline standee-size-btn active" data-size="a6" onclick="setStandeeSize('a6')">A6 (Table Tent)</button>
@@ -89,17 +98,20 @@
     </div>
 
     <div class="standee-control-group" style="margin-top:24px;">
-      <p class="chip-label" style="margin-bottom:12px;">Download</p>
+      <p class="chip-label" style="margin-bottom:12px;">Download & Print</p>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <button type="button" class="btn btn-primary btn-sm btn-inline" onclick="printStandee()">
-          🖨 Print This Page
+          🖨 Print / Save as PDF
         </button>
+        <a id="downloadQrBtn" href="/qr/{{ business.slug }}.png?download=1" class="btn btn-secondary btn-sm btn-inline">
+          ↓ Download QR Only
+        </a>
       </div>
       <p class="hint" style="margin-top:12px;">
-        Use your browser's Print function (Ctrl+P) and select "Save as PDF" for a high-quality PDF.<br/>
-        Or right-click the preview above → Save Image.
+        Use your browser's Print function (Ctrl+P) and select "Save as PDF" for high-resolution vector output.
       </p>
     </div>
+
 
     <!-- Printing Tips -->
     <div style="margin-top:32px;">
@@ -127,11 +139,53 @@
 
 <script>
 (function() {
+  var baseSlug = "{{ business.slug }}";
+  var baseReviewUrl = "{{ review_link }}";
+
   window.updateStandeeHeadline = function() {
     var input = document.getElementById('standeeHeadlineInput');
     var headline = document.getElementById('standeeHeadline');
     if (input && headline) {
       headline.innerHTML = input.value.replace(/\n/g, '<br/>');
+    }
+  };
+
+  window.updateStandeeLocation = function() {
+    var locInput = document.getElementById('standeeLocationInput');
+    var tagBadge = document.getElementById('standeeTag');
+    var qrImg = document.getElementById('standeeQR');
+    var urlText = document.querySelector('.standee-url');
+    var dlBtn = document.getElementById('downloadQrBtn');
+
+    var val = locInput ? locInput.value.trim() : '';
+    if (val) {
+      if (tagBadge) {
+        tagBadge.innerText = '📍 ' + val;
+        tagBadge.style.display = 'inline-block';
+      }
+      var cleanSource = val.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      if (qrImg) {
+        qrImg.src = '/qr/' + baseSlug + '.png?source=' + encodeURIComponent(cleanSource);
+      }
+      if (urlText) {
+        urlText.innerText = baseReviewUrl + '?source=' + cleanSource;
+      }
+      if (dlBtn) {
+        dlBtn.href = '/qr/' + baseSlug + '.png?download=1&source=' + encodeURIComponent(cleanSource);
+      }
+    } else {
+      if (tagBadge) {
+        tagBadge.style.display = 'none';
+      }
+      if (qrImg) {
+        qrImg.src = '/qr/' + baseSlug + '.png';
+      }
+      if (urlText) {
+        urlText.innerText = baseReviewUrl;
+      }
+      if (dlBtn) {
+        dlBtn.href = '/qr/' + baseSlug + '.png?download=1';
+      }
     }
   };
 
@@ -147,4 +201,5 @@
   };
 })();
 </script>
+
 {% endblock %}

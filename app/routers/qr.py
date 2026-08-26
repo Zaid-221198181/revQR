@@ -9,22 +9,26 @@ from app.services.qr_generator import generate_qr_code
 
 router = APIRouter(prefix="/qr", tags=["qr"])
 
+
 @router.get("/{slug}.{ext}")
 async def get_qr_image(
     slug: str,
     ext: str,
     request: Request,
     download: int = 0,
+    source: str = "",
+    color: str = "",
+    badge: int = 1,
     business: Business = Depends(get_current_business),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Serve the QR code for a business as PNG or SVG.
-    Only allows access if the business has paid or is an admin.
+    Serve the branded QR code for a business as PNG or SVG.
+    Supports brand colors, center badge, staff/table source tracking, and footer identification.
     """
     if ext not in ["png", "svg"]:
         raise HTTPException(status_code=400, detail="Invalid format. Use png or svg.")
-    
+
     target_business = business
     # Check if the requested slug matches the logged-in business or if caller is admin
     if business.slug != slug:
@@ -34,23 +38,44 @@ async def get_qr_image(
         target_business = res.scalar_one_or_none()
         if not target_business:
             raise HTTPException(status_code=404, detail="Business not found.")
-    
+
     # Check paywall (admin always bypasses)
     if not business.is_admin and not target_business.has_paid:
         raise HTTPException(status_code=402, detail="Payment required to unlock QR code.")
-    
+
     # Generate the target URL for the QR code
     app_url = str(request.base_url).rstrip("/")
     target_url = f"{app_url}/review/{target_business.slug}"
-    
+    if source.strip():
+        target_url += f"?source={source.strip()}"
+
+    # Determine QR color (default to business brand color or black)
+    fill_color = color.strip() if color.strip() else (target_business.brand_color or "#18181b")
+
+    # Center badge text (business initials)
+    center_text = target_business.name if badge == 1 else None
+
+    # Bottom label text for downloaded images (shows business name and custom source/table)
+    label_text = None
+    if download == 1:
+        source_label = f" · {source.strip().replace('_', ' ').title()}" if source.strip() else ""
+        label_text = f"revQR · {target_business.name}{source_label}"
+
     # Generate QR Code bytes
-    qr_bytes = generate_qr_code(target_url, format=ext)
-    
+    qr_bytes = generate_qr_code(
+        target_url,
+        format=ext,
+        fill_color=fill_color,
+        center_text=center_text,
+        logo_path=None,
+        label_text=label_text,
+    )
+
     media_type = "image/png" if ext == "png" else "image/svg+xml"
-    
+
     headers = {}
     if download == 1:
-        headers["Content-Disposition"] = f'attachment; filename="qr_{target_business.slug}.{ext}"'
-        
-    return Response(content=qr_bytes, media_type=media_type, headers=headers)
+        source_suffix = f"_{source.strip()}" if source.strip() else ""
+        headers["Content-Disposition"] = f'attachment; filename="qr_{target_business.slug}{source_suffix}.{ext}"'
 
+    return Response(content=qr_bytes, media_type=media_type, headers=headers)

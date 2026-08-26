@@ -13,7 +13,24 @@
 <!-- ═══════════════════════════════════════════════════════════════════════
      UNLOCKED STATE — QR code is available
      ═══════════════════════════════════════════════════════════════════════ -->
-<div class="qr-display">
+<div class="qr-display" style="max-width:440px;">
+  <!-- Custom Location/Table Selector -->
+  <div style="margin-bottom:20px; text-align:left; background:var(--paper-deep); border:1px solid var(--line); border-radius:12px; padding:16px;">
+    <label class="form-label" style="font-size:12px; font-weight:700; margin-bottom:6px;">📍 Optional Location / Table / Counter Tag</label>
+    <div style="display:flex; gap:8px;">
+      <input
+        type="text"
+        id="qrTagInput"
+        class="form-input"
+        placeholder="e.g. Table 1, Counter, Bar"
+        style="padding:8px 12px; font-size:13px;"
+        oninput="updateCustomQR()"
+      />
+      <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('qrTagInput').value=''; updateCustomQR();">Clear</button>
+    </div>
+    <p class="hint" style="margin-top:6px; font-size:11px;">Generate distinct QR codes for individual tables, waiters, or counters to track reviews by location.</p>
+  </div>
+
   <div class="qr-preview">
     <img
       src="/qr/{{ business.slug }}.png"
@@ -22,17 +39,23 @@
     />
   </div>
 
-  <p class="meta-line" style="margin-top:16px;">
+  <p class="meta-line" style="margin-top:16px;" id="qrMetaLine">
     {{ business.name | upper }} · {{ business.slug | upper }}
   </p>
-  <p class="qr-url">{{ app_url }}/review/{{ business.slug }}</p>
+  <p class="qr-url" id="qrUrlDisplay">{{ app_url }}/review/{{ business.slug }}</p>
 
   <div class="qr-actions">
-    <a href="/qr/{{ business.slug }}.png?download=1" class="btn btn-secondary btn-sm btn-inline" download>
+    <a id="qrDownloadPng" href="/qr/{{ business.slug }}.png?download=1" class="btn btn-primary btn-sm btn-inline" download>
       ↓ Download PNG
     </a>
-    <a href="/qr/{{ business.slug }}.svg?download=1" class="btn btn-secondary btn-sm btn-inline" download>
+    <a id="qrDownloadSvg" href="/qr/{{ business.slug }}.svg?download=1" class="btn btn-secondary btn-sm btn-inline" download>
       ↓ Download SVG
+    </a>
+  </div>
+
+  <div style="margin-top:20px;">
+    <a href="/dashboard/standee" class="btn btn-accent btn-sm" style="text-decoration:none; display:inline-block; width:100%;">
+      ✨ Open Print-Ready Standee & Table-Tent Kit →
     </a>
   </div>
 
@@ -40,13 +63,45 @@
   <div style="margin-top:32px; text-align:left;">
     <p class="chip-label" style="margin-bottom:12px;">Printing Tips</p>
     <div class="hint" style="margin-top:0;">
-      <p>• Print at <b>300 DPI or higher</b> for best quality</p>
-      <p style="margin-top:4px;">• Recommended size: <b>3×3 inches</b> minimum</p>
-      <p style="margin-top:4px;">• Place near the <b>checkout counter, entrance, or table tents</b></p>
-      <p style="margin-top:4px;">• Make sure there's <b>good lighting</b> — phones need contrast to scan</p>
+      <p>• Unique QR: Encoded specifically with your business slug <b>/review/{{ business.slug }}</b></p>
+      <p style="margin-top:4px;">• Brand Badge: Automatically includes your business initial badge in the center</p>
+      <p style="margin-top:4px;">• Print at <b>300 DPI or higher</b> (minimum 3×3 inches)</p>
+      <p style="margin-top:4px;">• Place near the <b>checkout counter, entrance, or dining tables</b></p>
     </div>
   </div>
 </div>
+
+<script>
+function updateCustomQR() {
+  var input = document.getElementById('qrTagInput');
+  var qrImg = document.getElementById('qrImage');
+  var urlDisplay = document.getElementById('qrUrlDisplay');
+  var metaLine = document.getElementById('qrMetaLine');
+  var dlPng = document.getElementById('qrDownloadPng');
+  var dlSvg = document.getElementById('qrDownloadSvg');
+
+  var baseSlug = "{{ business.slug }}";
+  var bizName = "{{ business.name | upper }}";
+  var baseAppUrl = "{{ app_url }}";
+
+  var val = input ? input.value.trim() : '';
+  if (val) {
+    var cleanSource = val.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    qrImg.src = '/qr/' + baseSlug + '.png?source=' + encodeURIComponent(cleanSource);
+    urlDisplay.innerText = baseAppUrl + '/review/' + baseSlug + '?source=' + cleanSource;
+    metaLine.innerText = bizName + ' · ' + baseSlug.toUpperCase() + ' · ' + val.toUpperCase();
+    dlPng.href = '/qr/' + baseSlug + '.png?download=1&source=' + encodeURIComponent(cleanSource);
+    dlSvg.href = '/qr/' + baseSlug + '.svg?download=1&source=' + encodeURIComponent(cleanSource);
+  } else {
+    qrImg.src = '/qr/' + baseSlug + '.png';
+    urlDisplay.innerText = baseAppUrl + '/review/' + baseSlug;
+    metaLine.innerText = bizName + ' · ' + baseSlug.toUpperCase();
+    dlPng.href = '/qr/' + baseSlug + '.png?download=1';
+    dlSvg.href = '/qr/' + baseSlug + '.svg?download=1';
+  }
+}
+</script>
+
 
 {% else %}
 <!-- ═══════════════════════════════════════════════════════════════════════
