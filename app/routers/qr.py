@@ -49,8 +49,9 @@ async def get_qr_image(
     if source.strip():
         target_url += f"?source={source.strip()}"
 
-    # Determine QR color (default to business brand color or black)
-    fill_color = color.strip() if color.strip() else (target_business.brand_color or "#18181b")
+    # Determine QR color (default to solid black for maximum scannability and contrast)
+    fill_color = color.strip() if color.strip() else "#000000"
+
 
     # Center badge text (business initials)
     center_text = target_business.name if badge == 1 else None
